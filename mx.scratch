@@ -6,7 +6,7 @@
     <WorkspacePath>C:\Users\iFeli\Repositories\Tesla Repositories\Gerador-e-visualizador-de-sinais\</WorkspacePath>
     <underRoot>true</underRoot>
     <TrustZone>0</TrustZone>
-    <HAL_Driver>C:\Users\iFeli\STM32Cube\Repository\STM32Cube_FW_F1_V1.7.0</HAL_Driver>
+    <HAL_Driver>C:\Users\iFeli\STM32Cube\Repository\STM32Cube_FW_F1_V1.8.4</HAL_Driver>
     <CMSIS>Drivers/CMSIS</CMSIS>
     <Toolchain>STM32CubeIDE</Toolchain>
     <IocFile>signal-visualizer-and-generator.ioc</IocFile>
@@ -55,7 +55,7 @@
             <memory access="xrw" name="RAM" size="20" start="0x20000000" />
             <memory access="rx" name="FLASH" size="64" start="0x8000000" />
           </memories>
-          <startup>C:\Users\iFeli\STM32Cube\Repository\STM32Cube_FW_F1_V1.7.0\Drivers\CMSIS\Device\ST\STM32F1xx\Source\Templates\gcc\startup_stm32f103xb.s</startup>
+          <startup>C:\Users\iFeli\STM32Cube\Repository\STM32Cube_FW_F1_V1.8.4\Drivers\CMSIS\Device\ST\STM32F1xx\Source\Templates\gcc\startup_stm32f103xb.s</startup>
           <LinkSettings>
             <LinkAdditionalLibs />
           </LinkSettings>
