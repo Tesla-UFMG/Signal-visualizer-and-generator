@@ -1,44 +1,38 @@
 
-#include <application/controller.h>
-#include <application/timer_handler.h>
-#include <application/visualizer.h>
 #include "main.h"
 #include "stm32f1xx_hal.h"
 
+#include <application/controller.h>
+#include <application/timer_handler.h>
+#include <application/visualizer.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define MAX_RX_SIZE 15
 
 extern TIM_HandleTypeDef htim3;
 
-void module_start();
-void module_stop();
-void active_ch(uint16_t chanel_atv);
-void change_freq();
-void visualizer_update_frequency(int32_t requestedFrequency);
+static void module_start(void);
+static void module_stop(void);
+static void change_freq(void);
 
-uint16_t adc_atv = 0, pwm_v = 0;
-uint32_t tim3_prs = 71, tim2_prs = 71;
+// remove:
+uint16_t pwm_v    = 0;
+uint32_t tim3_prs = 71;
 extern uint16_t sen_pwm[100];
 extern uint8_t sen_act;
-
-uint16_t i;
-double ang, sin_tmp;
-char char_aux;
 
 static uint32_t visualizer_timer;
 static bool controller_status = false;
 
-void ControllerInit(void) {
-
+void controller_init(void) {
     __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 0);
     module_stop();
     visualizer_init();
     timer_restart(&visualizer_timer);
 }
 
-void ControllerHandler(void) {
-
+void controller_handler(void) {
     if (controller_status && timer_wait_ms(visualizer_timer, visualizer_get_period())) {
         timer_restart(&visualizer_timer);
         visualizer_print_channels();
@@ -71,7 +65,7 @@ void controller_receive_message(char* message, uint32_t size) {
     }
 }
 
-void module_start() {
+static void module_start(void) {
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, 0);
     HAL_TIM_Base_Start_IT(&htim3);
     HAL_TIM_Base_Start(&htim3);
@@ -79,19 +73,14 @@ void module_start() {
     controller_status = true;
 }
 
-void module_stop() {
+static void module_stop(void) {
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, 1);
     __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 0);
     HAL_TIM_Base_Stop_IT(&htim3);
     controller_status = false;
 }
 
-void active_ch(uint16_t chanel_atv) {
-    module_stop();
-    adc_atv = chanel_atv;
-}
-
-void change_freq() {
+static void change_freq(void) {
     module_stop();
     // if (message[4] == '1' && message[5] == '0' && message[6] == '0') {
     //     sen_act  = 1;
