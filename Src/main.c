@@ -18,6 +18,7 @@
  */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
+#include <application/controller.h>
 #include "main.h"
 #include "usb_device.h"
 
@@ -28,7 +29,7 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-#define GAIN_ADC 1.2182
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -45,20 +46,10 @@
 ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc1;
 
-TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 
 /* USER CODE BEGIN PV */
-extern uint16_t index_usb;
-extern char usb_rs[50];
-extern uint16_t tim_ovr;
-extern uint16_t tam;
-extern char data_tx[50];
-uint16_t adc_buf[4], adc_atv=0, pwm_v=0;
-uint8_t status_mod=0;
-uint32_t tim3_prs=71, tim2_prs=71;
-extern uint16_t sen_pwm[100];
-extern uint8_t sen_act;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -66,177 +57,13 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_ADC1_Init(void);
-static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
 /* USER CODE BEGIN PFP */
-void module_start()
-{
-	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, 0);
-	HAL_TIM_Base_Start_IT(&htim2);
-	HAL_TIM_Base_Start_IT(&htim3);
-	HAL_TIM_Base_Start(&htim2);
-	HAL_TIM_Base_Start(&htim3);
-	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
-	status_mod=1;
-}
-void module_stop()
-{
-	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, 1);
-	HAL_TIM_Base_Stop_IT(&htim2);
-	__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1,0);
-	HAL_TIM_Base_Stop_IT(&htim3);
-	tim_ovr=0;
-	status_mod=0;
-}
-
-void active_ch(uint16_t chanel_atv)
-{
-	module_stop();
-	adc_atv=chanel_atv;
-}
-
-void change_freq()
-{
-	module_stop();
-	if(usb_rs[4]=='1' && usb_rs[5]=='0' && usb_rs[6]=='0')
-	{
-		sen_act=1;
-		tim3_prs = 7;
-		MX_TIM3_Init();
-	}
-	else if(usb_rs[4]=='1' && usb_rs[5]=='0')
-	{
-		sen_act=1;
-		tim3_prs = 71;
-		MX_TIM3_Init();
-	}
-	else if(usb_rs[4]=='1')
-	{
-		sen_act=1;
-		tim3_prs = 719;
-		MX_TIM3_Init();
-	}
-	else if(usb_rs[4]=='5' && usb_rs[5]=='0')
-	{
-		sen_act=1;
-		tim3_prs = 13;
-		MX_TIM3_Init();
-	}
-	else if(usb_rs[4]=='5')
-	{
-		sen_act=1;
-		tim3_prs = 143;
-		MX_TIM3_Init();
-	}
-	else if(usb_rs[4]=='3' && usb_rs[5]=='0')
-	{
-		sen_act=1;
-		tim3_prs = 23;
-		MX_TIM3_Init();
-	}
-	else if(usb_rs[4]=='2' && usb_rs[5]=='0')
-	{
-		sen_act=1;
-		tim3_prs = 35;
-		MX_TIM3_Init();
-	}
-	else if(usb_rs[4]=='2')
-	{
-		sen_act=1;
-		tim3_prs = 359;
-		MX_TIM3_Init();
-	}
-	else if(usb_rs[4]=='0' && usb_rs[5]=='5')
-	{
-		sen_act=1;
-		tim3_prs = 1439;
-		MX_TIM3_Init();
-	}
-	else if(usb_rs[4]=='0' && usb_rs[5]=='2')
-	{
-		sen_act=1;
-		tim3_prs = 3599;
-		MX_TIM3_Init();
-	}
-	else if(usb_rs[4]=='0')
-	{
-		sen_act=0;
-		__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1,pwm_v);
-	}
-}
-
-void change_freq_aq()
-{
-	module_stop();
-	if(usb_rs[7]=='2' && usb_rs[8]=='0' && usb_rs[9]=='0')
-	{
-		tim2_prs = 71;
-		MX_TIM2_Init();
-	}
-	else if(usb_rs[7]=='1' && usb_rs[8]=='0' && usb_rs[9]=='0')
-	{
-		tim2_prs = 143;
-		MX_TIM2_Init();
-	}
-	else if(usb_rs[7]=='5' && usb_rs[8]=='0')
-	{
-		tim2_prs = 287;
-		MX_TIM2_Init();
-	}
-	else if(usb_rs[7]=='2' && usb_rs[8]=='0')
-	{
-		tim2_prs = 719;
-		MX_TIM2_Init();
-	}
-	else if(usb_rs[7]=='9')
-	{
-		tim2_prs = 1514;
-		MX_TIM2_Init();
-	}
-}
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
-{
-	if(adc_atv==0)
-	{
-		tam=sprintf(data_tx, "%.1f\n",(float)(adc_buf[0]/GAIN_ADC));
-	}
-	else if(adc_atv==1)
-	{
-		tam=sprintf(data_tx, "%.1f\t%.1f\n",(float)(adc_buf[0]/GAIN_ADC),(float)(adc_buf[1]/GAIN_ADC));
-	}
-	else if(adc_atv==2)
-	{
-		tam=sprintf(data_tx, "%.1f\t%.1f\t%.1f\n",(float)(adc_buf[0]/GAIN_ADC),(float)(adc_buf[1]/GAIN_ADC),(float)(adc_buf[2]/GAIN_ADC));
-	}
-	else if(adc_atv==3)
-	{
-		tam=sprintf(data_tx, "%.1f\t%.1f\t%.1f\t%.1f\n",(float)(adc_buf[0]/GAIN_ADC),(float)(adc_buf[1]/GAIN_ADC),(float)(adc_buf[2]/GAIN_ADC),(float)(adc_buf[3]/GAIN_ADC));
-	}
-
-//	if(adc_atv==0)
-//		{
-//			tam=sprintf(data_tx, "%d\n",(adc_buf[0]/4));
-//		}
-//		else if(adc_atv==1)
-//		{
-//			tam=sprintf(data_tx, "%d\t%d\n",(adc_buf[0]/4),(adc_buf[1]/4));
-//		}
-//		else if(adc_atv==2)
-//		{
-//			tam=sprintf(data_tx, "%d\t%d\t%d\n",(adc_buf[0]/4),(adc_buf[1]/4),(adc_buf[2]/4));
-//		}
-//		else if(adc_atv==3)
-//		{
-//			tam=sprintf(data_tx, "%d\t%d\t%d\t%d\n",(adc_buf[0]/4),(adc_buf[1]/4),(adc_buf[2]/4),(adc_buf[3]/4));
-//		}
-	CDC_Transmit_FS(data_tx, tam);
-}
-
 
 /* USER CODE END 0 */
 
@@ -247,9 +74,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	uint16_t i;
-	double ang, sin_tmp;
-	char char_aux;
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -272,63 +97,18 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_ADC1_Init();
-  MX_TIM2_Init();
   MX_USB_DEVICE_Init();
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
-	HAL_ADC_Start_DMA(&hadc1,(uint16_t*)adc_buf, 4);
-	__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1,0);
-	module_stop();
+	ControllerInit();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 	while (1)
 	{
-		if(strncmp(usb_rs, "start", 5) == 0)
-		{
-			module_start();
-			index_usb = 0;
-			usb_rs[0]= '\0';
-		}
-		else if(strncmp(usb_rs, "stop", 4) == 0)
-		{
-			module_stop();
-			index_usb = 0;
-			usb_rs[0]= '\0';
-		}
-		else if(strncmp(usb_rs, "act_ch", 6) == 0)
-		{
-			char_aux=usb_rs[6];
-			if(char_aux=='0')
-				active_ch(0);
-			else if(char_aux=='1')
-				active_ch(1);
-			else if(char_aux=='2')
-				active_ch(2);
-			else if(char_aux=='3')
-				active_ch(3);
-			index_usb = 0;
-			usb_rs[0]= '\0';
-		}
-		else if(strncmp(usb_rs, "freq_aq", 7) == 0)
-		{
-			change_freq_aq();
-		}
-		else if(strncmp(usb_rs, "freq", 4) == 0)
-		{
-			change_freq();
-		}
-		else if(strncmp(usb_rs, "pwm_v", 5) == 0)
-				{
-					pwm_v=(usb_rs[5]-48)*1000 + (usb_rs[6]-48)*100 + (usb_rs[7]-48)*10 + usb_rs[8]-48;
-					if(pwm_v > 1000)
-						pwm_v=1000;
-					__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1,pwm_v);
-				}
-		else if(index_usb > 2)
-			index_usb=0;
+    ControllerHandler();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -405,12 +185,11 @@ static void MX_ADC1_Init(void)
   */
   hadc1.Instance = ADC1;
   hadc1.Init.ScanConvMode = ADC_SCAN_ENABLE;
-  hadc1.Init.ContinuousConvMode = DISABLE;
-  hadc1.Init.DiscontinuousConvMode = ENABLE;
-  hadc1.Init.NbrOfDiscConversion = 4;
+  hadc1.Init.ContinuousConvMode = ENABLE;
+  hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 4;
+  hadc1.Init.NbrOfConversion = 6;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
     Error_Handler();
@@ -452,54 +231,28 @@ static void MX_ADC1_Init(void)
   {
     Error_Handler();
   }
+
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_4;
+  sConfig.Rank = ADC_REGULAR_RANK_5;
+  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_5;
+  sConfig.Rank = ADC_REGULAR_RANK_6;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
   /* USER CODE BEGIN ADC1_Init 2 */
 
   /* USER CODE END ADC1_Init 2 */
-
-}
-
-/**
-  * @brief TIM2 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_TIM2_Init(void)
-{
-
-  /* USER CODE BEGIN TIM2_Init 0 */
-
-  /* USER CODE END TIM2_Init 0 */
-
-  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
-  TIM_MasterConfigTypeDef sMasterConfig = {0};
-
-  /* USER CODE BEGIN TIM2_Init 1 */
-
-  /* USER CODE END TIM2_Init 1 */
-  htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 71;
-  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 5000;
-  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN TIM2_Init 2 */
-
-  /* USER CODE END TIM2_Init 2 */
 
 }
 
@@ -586,6 +339,8 @@ static void MX_DMA_Init(void)
 static void MX_GPIO_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
+/* USER CODE BEGIN MX_GPIO_Init_1 */
+/* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
@@ -602,6 +357,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
+/* USER CODE BEGIN MX_GPIO_Init_2 */
+/* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
