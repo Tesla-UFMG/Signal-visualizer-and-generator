@@ -3,15 +3,15 @@
   <FileVersion>3.0</FileVersion>
   <Workspace>
     <WorkspaceType>Single-project</WorkspaceType>
-    <WorkspacePath>C:\Users\iFeli\Repositories\Tesla Repositories\Gerador-e-visualizador-de-sinais\</WorkspacePath>
+    <WorkspacePath>C:\Repositories\Tesla\Signal-visualizer-and-generator\</WorkspacePath>
     <underRoot>true</underRoot>
     <TrustZone>0</TrustZone>
     <HAL_Driver>C:\Users\iFeli\STM32Cube\Repository\STM32Cube_FW_F1_V1.8.4</HAL_Driver>
     <CMSIS>Drivers/CMSIS</CMSIS>
     <Toolchain>STM32CubeIDE</Toolchain>
-    <IocFile>signal-visualizer-and-generator.ioc</IocFile>
+    <IocFile>Signal-visualizer-and-generator.ioc</IocFile>
     <Project>
-      <ProjectName>signal-visualizer-and-generator</ProjectName>
+      <ProjectName>Signal-visualizer-and-generator</ProjectName>
       <ProjectNature>C</ProjectNature>
       <Secure />
       <filestoremove>
@@ -45,7 +45,7 @@
       </sourceEntriesToRemove>
       <configs>
         <config>
-          <name>signal-visualizer-and-generator</name>
+          <name>Signal-visualizer-and-generator</name>
           <mainSourceRepo>Src</mainSourceRepo>
           <sourceStructure>Basic</sourceStructure>
           <device>STM32F103C8Tx</device>
@@ -61,6 +61,7 @@
           </LinkSettings>
           <heapSize>0x200</heapSize>
           <stackSize>0x400</stackSize>
+          <cpuclock>72</cpuclock>
           <board>custom</board>
           <debugprobe>swd</debugprobe>
           <optimization />
