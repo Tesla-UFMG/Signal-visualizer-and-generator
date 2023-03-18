@@ -1,8 +1,7 @@
-
 #include "main.h"
-#include "stm32f1xx_hal.h"
 
 #include <application/controller.h>
+#include <application/generator.h>
 #include <application/timer_handler.h>
 #include <application/visualizer.h>
 #include <stdlib.h>
@@ -10,23 +9,13 @@
 
 #define MAX_RX_SIZE 15
 
-extern TIM_HandleTypeDef htim3;
-
 static void module_start(void);
 static void module_stop(void);
-static void change_freq(void);
-
-// remove:
-uint16_t pwm_v    = 0;
-uint32_t tim3_prs = 71;
-extern uint16_t sen_pwm[100];
-extern uint8_t sen_act;
 
 static uint32_t visualizer_timer;
 static bool controller_status = false;
 
 void controller_init(void) {
-    __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 0);
     module_stop();
     visualizer_init();
     timer_restart(&visualizer_timer);
@@ -54,77 +43,23 @@ void controller_receive_message(char* message, uint32_t size) {
         visualizer_update_channels(atoi(&message[6]), false);
     } else if (strncmp(message, "freq", 4) == 0) {
         visualizer_update_frequency(atoi(&message[4]));
+    } else if (strncmp(message, "sine_freq", 9) == 0) {
+        generator_update_sine_frequency(atoi(&message[9]));
     } else if (strncmp(message, "pwm_freq", 8) == 0) {
-        change_freq();
-    } else if (strncmp(message, "pwm_v", 5) == 0) {
-        pwm_v = (message[5] - 48) * 1000 + (message[6] - 48) * 100
-                + (message[7] - 48) * 10 + message[8] - 48;
-        if (pwm_v > 1000)
-            pwm_v = 1000;
-        __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, pwm_v);
+        generator_update_pwm_frequency(atoi(&message[8]));
+    } else if (strncmp(message, "pwm_duty", 8) == 0) {
+        generator_update_pwm_duty(atoi(&message[8]));
     }
 }
 
 static void module_start(void) {
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, 0);
-    HAL_TIM_Base_Start_IT(&htim3);
-    HAL_TIM_Base_Start(&htim3);
-    HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
+    generator_start();
     controller_status = true;
 }
 
 static void module_stop(void) {
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, 1);
-    __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 0);
-    HAL_TIM_Base_Stop_IT(&htim3);
+    generator_stop();
     controller_status = false;
-}
-
-static void change_freq(void) {
-    module_stop();
-    // if (message[4] == '1' && message[5] == '0' && message[6] == '0') {
-    //     sen_act  = 1;
-    //     tim3_prs = 7;
-    //     MX_TIM3_Init();
-    // } else if (message[4] == '1' && message[5] == '0') {
-    //     sen_act  = 1;
-    //     tim3_prs = 71;
-    //     MX_TIM3_Init();
-    // } else if (message[4] == '1') {
-    //     sen_act  = 1;
-    //     tim3_prs = 719;
-    //     MX_TIM3_Init();
-    // } else if (message[4] == '5' && message[5] == '0') {
-    //     sen_act  = 1;
-    //     tim3_prs = 13;
-    //     MX_TIM3_Init();
-    // } else if (message[4] == '5') {
-    //     sen_act  = 1;
-    //     tim3_prs = 143;
-    //     MX_TIM3_Init();
-    // } else if (message[4] == '3' && message[5] == '0') {
-    //     sen_act  = 1;
-    //     tim3_prs = 23;
-    //     MX_TIM3_Init();
-    // } else if (message[4] == '2' && message[5] == '0') {
-    //     sen_act  = 1;
-    //     tim3_prs = 35;
-    //     MX_TIM3_Init();
-    // } else if (message[4] == '2') {
-    //     sen_act  = 1;
-    //     tim3_prs = 359;
-    //     MX_TIM3_Init();
-    // } else if (message[4] == '0' && message[5] == '5') {
-    //     sen_act  = 1;
-    //     tim3_prs = 1439;
-    //     MX_TIM3_Init();
-    // } else if (message[4] == '0' && message[5] == '2') {
-    //     sen_act  = 1;
-    //     tim3_prs = 3599;
-    //     HAL_TIM_PWM_Start();
-    //     MX_TIM3_Init();
-    // } else if (message[4] == '0') {
-    //     sen_act = 0;
-    //     __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, pwm_v);
-    // }
 }

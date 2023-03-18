@@ -20,10 +20,10 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
-#include <application/controller.h>
 #include "usbd_cdc_if.h"
 
 /* USER CODE BEGIN INCLUDE */
+#include <application/controller.h>
 
 /* USER CODE END INCLUDE */
 
