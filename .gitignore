@@ -16,7 +16,6 @@ local.properties
 .settings/
 .vscode/
 .loadpath
-*.cfg
 
 # External tool builders
 .externalToolBuilders/
