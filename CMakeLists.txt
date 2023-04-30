@@ -78,6 +78,8 @@ target_link_options(${EXE_NAME} PRIVATE
     -T${CMAKE_CURRENT_SOURCE_DIR}/STM32F103C8Tx_FLASH.ld
     -Wl,--gc-sections,--no-warn-rwx-segment
     -specs=nano.specs
+    -u _printf_float
+
 )
 
 target_compile_definitions(${EXE_NAME} PUBLIC

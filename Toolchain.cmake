@@ -2,7 +2,7 @@ set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_SYSTEM_PROCESSOR arm)
 
 set(TRIPLE arm-none-eabi)
-set(COMMON_COMPILER_FLAGS "-mcpu=cortex-m3 -mthumb -mfloat-abi=soft")
+set(COMMON_COMPILER_FLAGS "-mcpu=cortex-m3 -mfloat-abi=soft -mthumb ")
 
 if(${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Linux")
     set(EXE_SUFFIX "")
