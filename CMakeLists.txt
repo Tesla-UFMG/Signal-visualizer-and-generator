@@ -4,8 +4,8 @@ set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 
 find_program(CCACHE_FOUND ccache)
 if(CCACHE_FOUND)
-    message(STATUS "Found CCACHE!")
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+message(STATUS "Found CCACHE!")
+set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
 endif()
 
 set(CMAKE_C_STANDARD 17)
@@ -15,8 +15,8 @@ set(PROJECT_NAME Signal-visualizer-and-generator)
 
 # CMAKE project name, languages and version
 project(${PROJECT_NAME}
-    LANGUAGES C ASM
-    VERSION 0.1
+LANGUAGES C ASM
+VERSION 0.1
 )
 
 # Reduce binary size. Might be used to code to fit in the MCU
@@ -79,7 +79,6 @@ target_link_options(${EXE_NAME} PRIVATE
     -Wl,--gc-sections,--no-warn-rwx-segment
     -specs=nano.specs
     -u _printf_float
-
 )
 
 target_compile_definitions(${EXE_NAME} PUBLIC
@@ -91,23 +90,4 @@ add_custom_target(flash
     openocd -f ${CMAKE_CURRENT_SOURCE_DIR}/${OPENOCD_CFG_NAME} -c "program ${EXE_NAME} reset exit"
     VERBATIM
 )
-
-add_custom_target(flash_no_reset
-    openocd -f ${CMAKE_CURRENT_SOURCE_DIR}/${OPENOCD_CFG_NAME} -c "program ${EXE_NAME} exit"
-    VERBATIM
-)
-
-add_custom_target(connect
-    openocd -f ${CMAKE_CURRENT_SOURCE_DIR}/${OPENOCD_CFG_NAME}
-    VERBATIM
-)
-
-add_custom_target(debug
-    arm-none-eabi-gdb -ex "target extended-remote localhost:3333" ${CMAKE_BINARY_DIR}/${EXE_NAME}
-    VERBATIM
-)
-
-add_dependencies(flash ${EXE_NAME})
-add_dependencies(flash_no_reset ${EXE_NAME})
-add_dependencies(debug ${EXE_NAME})
 
